@@ -2931,3 +2931,59 @@ async def sync_aurora_dataset_endpoint():
     """
     return aurora_manager.sync_dataset_to_aurora()
 
+
+# -------------------------------------------------------------
+# CITIZEN TELEGRAM BOT ENDPOINTS
+# -------------------------------------------------------------
+
+from backend.telegram_bot import get_citizen_telegram_bot, CITIZEN_INCIDENTS, AMC_RELIEF_FACILITIES
+
+
+@app.post("/api/telegram/webhook")
+async def telegram_webhook(update: Dict[str, Any]):
+    """
+    Inbound webhook endpoint for Telegram Bot updates.
+    Handles messages, commands, GPS location shares, and callback buttons.
+    """
+    bot = get_citizen_telegram_bot()
+    await bot.process_update(update)
+    return {"status": "ok"}
+
+
+@app.get("/api/telegram/status")
+async def get_telegram_status():
+    """
+    Returns Telegram bot connectivity status and operational statistics.
+    """
+    bot = get_citizen_telegram_bot()
+    return {
+        "is_configured": bot.is_configured,
+        "token_present": bool(bot.token),
+        "total_facilities": len(AMC_RELIEF_FACILITIES),
+        "active_citizen_tickets": len(CITIZEN_INCIDENTS),
+        "webhook_url": "/api/telegram/webhook"
+    }
+
+
+@app.get("/api/telegram/incidents")
+async def list_citizen_incidents():
+    """
+    Returns all citizen-reported incidents submitted via Telegram.
+    """
+    return {
+        "total": len(CITIZEN_INCIDENTS),
+        "incidents": list(CITIZEN_INCIDENTS.values())
+    }
+
+
+@app.get("/api/telegram/facilities")
+async def list_relief_facilities():
+    """
+    Returns list of AMC designated cooling shelters and hydration points.
+    """
+    return {
+        "city": "Ahmedabad",
+        "total": len(AMC_RELIEF_FACILITIES),
+        "facilities": AMC_RELIEF_FACILITIES
+    }
+
