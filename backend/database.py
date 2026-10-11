@@ -11,8 +11,19 @@ import json
 import uuid
 from datetime import datetime, timezone
 from typing import Dict, List, Any, Optional, Tuple
+import shutil
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "data", "climateshield_baseline.db")
+if os.environ.get("VERCEL"):
+    TMP_DB = "/tmp/climateshield_baseline.db"
+    ORIGINAL_DB = os.path.join(os.path.dirname(__file__), "data", "climateshield_baseline.db")
+    if not os.path.exists(TMP_DB) and os.path.exists(ORIGINAL_DB):
+        try:
+            shutil.copy2(ORIGINAL_DB, TMP_DB)
+        except Exception:
+            pass
+    DB_PATH = TMP_DB
+else:
+    DB_PATH = os.path.join(os.path.dirname(__file__), "data", "climateshield_baseline.db")
 
 
 def get_db_connection() -> sqlite3.Connection:
